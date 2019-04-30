@@ -14,9 +14,17 @@ public class DataVO {
     private String phone;
     private String machineName;
     private String productName;
+    private String productUID;
     private String num = "1";
     private String type;
 
+    public String getProductUID() {
+        return productUID;
+    }
+
+    public void setProductUID(String productUID) {
+        this.productUID = productUID;
+    }
     public String getOrder_id() {
         return order_id;
     }

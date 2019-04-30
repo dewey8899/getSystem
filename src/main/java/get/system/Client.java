@@ -57,6 +57,7 @@ public class Client {
         this.password = password;
     }
 
+    //1.登录
     public boolean login() {
         HttpGet getLoginPage = new HttpGet("https://sh.tivolitech.com/login");//教务处登陆页面get
         try {
@@ -140,6 +141,7 @@ public class Client {
         }
     }
 
+    //2.获取所有的订单
     public void getOrders() throws IOException, URISyntaxException {
         HttpResponse response = null;
         String getOrdersUrl = "https://api.tivolitech.com/order/operate";
@@ -184,9 +186,9 @@ public class Client {
             HttpEntity entity = response.getEntity();
             rawHtml = EntityUtils.toString(entity, "utf-8");
             System.out.println(rawHtml);
-            List<String> orderIds = getOrderIds(rawHtml);
+            List<String> orderIds = getOrderIds(rawHtml);//3.获取所有的订单ID
             if (orderIds.size() > 0) {
-                List<DataVO> vos = getOrderDetail(orderIds);
+                List<DataVO> vos = getOrderDetail(orderIds);//4.获取每个订单的商品列表
                 exportExcel(vos);
             }
         }
@@ -211,7 +213,7 @@ public class Client {
             postData.add(new BasicNameValuePair("order_id", orderIds.get(i)));
             uriBuilder.setParameters(postData);
 
-            HttpGet httpGet = new HttpGet(uriBuilder.build());//构建post对象
+            HttpGet httpGet = new HttpGet(uriBuilder.build());//构建get对象
             RequestConfig requestConfig = RequestConfig.custom()
                     .setSocketTimeout(30000)
                     .setConnectTimeout(30000).build();
@@ -232,18 +234,18 @@ public class Client {
             response = client.execute(httpGet);
             HttpEntity entity = response.getEntity();
             rawHtml = EntityUtils.toString(entity, "utf-8");
-            DataVO vo = getDataVo(rawHtml);
-            if (vo != null){
-                vos.add(vo);
+            List<DataVO> list = getDataVos(rawHtml);
+            if (list != null) {
+                vos.addAll(list);
             }
         }
         return vos;
 
     }
 
-    private DataVO getDataVo(String rawHtml) {
+    private List<DataVO> getDataVos(String rawHtml) {
         System.out.println(rawHtml);
-        DataVO vo = new DataVO();
+        List<DataVO> list = new ArrayList<DataVO>();
         JsonParser parse = new JsonParser();  //创建json解析器
         JsonObject object = (JsonObject) parse.parse(rawHtml);
         JsonObject dataObj = object.get("data").getAsJsonObject();
@@ -256,31 +258,38 @@ public class Client {
         String machineName = operaterInfo.get("machineName").getAsString();
         JsonArray productList = dataObj.get("productList").getAsJsonArray();
         if (productList.size() <= 0) {
-            System.out.println("没有数据！");
+            System.out.println("订单号：" + order_id + "没有商品数据！");
             return null;
         }
         for (int i = 0; i < productList.size(); i++) {
+            DataVO vo = new DataVO();
+            String proStatus = status;
             JsonObject obj = productList.get(i).getAsJsonObject();
             String productName = obj.get("productName").getAsString();
+            String productUID = obj.get("uid").getAsString();
             String type = obj.get("type").getAsString();
+
             vo.setProductName(productName);
+            vo.setProductUID(productUID);
             vo.setType(type);
+            vo.setCreateTime(createTime);
+            vo.setNum("1");
+            vo.setOrder_id(order_id);
+            if (status.equals("2")) {
+                proStatus = "成功";
+            } else if (status.equals("1")) {
+                proStatus = "失败";
+            } else {
+                proStatus = "无";
+            }
+            vo.setStatus(proStatus);
+            vo.setPhone(phone);
+            vo.setUserName(userName);
+            vo.setMachineName(machineName);
+            list.add(vo);
         }
-        vo.setCreateTime(createTime);
-        vo.setNum("1");
-        vo.setOrder_id(order_id);
-        if (status.equals("2")){
-            status = "成功";
-        }else  if (status.equals("1")){
-            status = "失败";
-        } else {
-            status = "无";
-        }
-        vo.setStatus(status);
-        vo.setPhone(phone);
-        vo.setUserName(userName);
-        vo.setMachineName(machineName);
-        return vo;
+
+        return list;
     }
 
     private List<String> getOrderIds(String rawHtml) {
@@ -311,7 +320,5 @@ public class Client {
                 e.printStackTrace();
             }
         }
-
     }
-
 }

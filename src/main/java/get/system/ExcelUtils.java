@@ -24,12 +24,11 @@ public class ExcelUtils {
 
         FileOutputStream os = new FileOutputStream(file);
         String[] headers = { "补货单编号", "补货操作时间", "补货状态", "姓名", "电话", "设备名称", "商品名称", "\n" +
-                "数量" , "商品状态"};
+                "商品标签UID" ,"数量" , "商品状态"};
         List<Object[]> dataset = new ArrayList<Object[]>();
         for (int i = 0; i < vos.size();i++) {
-            Object[] row = new Object[9];
+            Object[] row = new Object[10];
             DataVO dataVO = vos.get(i);
-            System.out.println("i====" + i);
             row[0] = dataVO.getOrder_id();
             row[1] = dataVO.getCreateTime();
             row[2] = dataVO.getStatus();
@@ -37,8 +36,9 @@ public class ExcelUtils {
             row[4] = dataVO.getPhone();
             row[5] = dataVO.getMachineName();
             row[6] = dataVO.getProductName();
-            row[7] = dataVO.getNum();
-            row[8] = dataVO.getType();
+            row[7] = dataVO.getProductUID();
+            row[8] = dataVO.getNum();
+            row[9] = dataVO.getType();
             dataset.add(row);
         }
         exportExcel("补货订单", headers, dataset, os, null);
@@ -122,14 +122,10 @@ public class ExcelUtils {
                     cell.setCellValue(text);
                 }
                 if (o[i] instanceof Integer) {
-                    // HSSFRichTextString text = new
-                    // HSSFRichTextString((Integer) o[i] + "");
                     cell.setCellValue(((Integer) o[i]).intValue());
-                    // cell.setCellValue(text);
                 }
                 if (o[i] instanceof Long) {
                     cell.setCellValue(scale2points(((Long) o[i]).floatValue()));
-                    // cell.setCellValue(((Long) o[i]).intValue());
                 }
                 if (o[i] instanceof Date) {
                     HSSFRichTextString text = new HSSFRichTextString(
@@ -147,8 +143,6 @@ public class ExcelUtils {
                             .floatValue()));
                 }
                 if (o[i] instanceof BigInteger) {
-                    // HSSFRichTextString text = new
-                    // HSSFRichTextString((BigInteger) o[i] + "");
                     cell.setCellValue(((BigInteger) o[i]).intValue());
                 }
             }
