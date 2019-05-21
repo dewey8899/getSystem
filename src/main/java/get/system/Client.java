@@ -4,6 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -22,12 +26,16 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -76,7 +84,7 @@ public class Client {
             postData.add(new BasicNameValuePair("userName", accout));//用户名
             postData.add(new BasicNameValuePair("password", password));//密码
             postData.add(new BasicNameValuePair("validateCode", validateCode));//验证码
-            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(30000).setConnectTimeout(30000).build();
+            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(60000).build();
             HttpPost post = new HttpPost("https://api.tivolitech.com/business/login");//构建post对象
             UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postData);
             post.setEntity(formEntity);//捆绑参数
@@ -121,26 +129,70 @@ public class Client {
     void getVerifyingCode(HttpClient client) {
         String url = "https://api.tivolitech.com/user/login/code?uuid=";
         HttpGet getVerifyCode = new HttpGet(url + uuid);//验证码get
-        FileOutputStream fileOutputStream = null;
+        OutputStream outputStream = null;
         HttpResponse response;
         try {
             response = client.execute(getVerifyCode);//获取验证码
             /*验证码写入文件,当前工程的根目录,保存为verifyCode.jped*/
-            fileOutputStream = new FileOutputStream(new File("e:/verifyCode.jpg"));
-            response.getEntity().writeTo(fileOutputStream);
+            outputStream = new FileOutputStream(new File("e:/verifyCode.jpg"));
+            response.getEntity().writeTo(outputStream);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             try {
-                fileOutputStream.close();
+                outputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
+    private static File createImage(String imagePath) throws IOException {
+        String fileType = getFileType(imagePath);
+        Iterator<ImageReader> iterator = ImageIO.getImageReadersByFormatName(fileType);
+        ImageReader reader = iterator.next();/*获取图片尺寸*/
+        InputStream inputStream = new FileInputStream(imagePath);
+        ImageInputStream iis = ImageIO.createImageInputStream(inputStream);
+        reader.setInput(iis, true);
+        ImageReadParam param = reader.getDefaultReadParam();
+        Rectangle rectangle = new Rectangle(0,0, 400, 250);        /*指定截取范围*/
+        param.setSourceRegion(rectangle);
+        BufferedImage bi = reader.read(0,param);
+        File outfile = new File("e:/images/verifyCode22.jpg");
+        File dir = new File(outfile.getParent());
+        if(!dir.exists()) {
+            dir.mkdirs();
+        }
+        ImageIO.write(bi, "JPEG", outfile);
+        return outfile;
+    }
+    public static String getFileType(String filePath) {
+        FileInputStream fis = null;
+        /**
+         * 根据文件名称，获取后缀名的方式，但是不保险
+         */
+        String extension = FilenameUtils.getExtension(filePath);
+        try {
+            fis = new FileInputStream(new File(filePath));
+            byte[] bs = new byte[1];
+            fis.read(bs);
+            String type = Integer.toHexString(bs[0]&0xFF);
+            if("ff".equalsIgnoreCase(type))  extension = "JPEG";
+            if("89".equalsIgnoreCase(type)) extension = "PNG";
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("获取图片类型出错 : " +  filePath);
+        } finally {
+            try{
+                if(fis != null) fis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return extension;
+    }
     //2.获取所有的订单
     public void getOrders() throws IOException, URISyntaxException {
         HttpResponse response = null;
@@ -164,8 +216,8 @@ public class Client {
         HttpGet httpGet =
                 new HttpGet(uriBuilder.build());//构建post对象
         RequestConfig requestConfig = RequestConfig.custom()
-                .setSocketTimeout(30000)
-                .setConnectTimeout(30000).build();
+                .setSocketTimeout(60000)
+                .setConnectTimeout(60000).build();
         httpGet.setConfig(requestConfig);
         List<Cookie> cookies = cookieStore.getCookies();
         String sessionId = null;
@@ -215,8 +267,8 @@ public class Client {
 
             HttpGet httpGet = new HttpGet(uriBuilder.build());//构建get对象
             RequestConfig requestConfig = RequestConfig.custom()
-                    .setSocketTimeout(30000)
-                    .setConnectTimeout(30000).build();
+                    .setSocketTimeout(60000)
+                    .setConnectTimeout(60000).build();
             httpGet.setConfig(requestConfig);
             List<Cookie> cookies = cookieStore.getCookies();
             String sessionId = null;
@@ -309,16 +361,39 @@ public class Client {
         return list;
     }
 
-    public static void main(String[] args) {
-        Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
-        if (client.login()) {
-            try {
-                client.getOrders();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
+    public static void main(String[] args) throws IOException {
+
+//        String imagePath2 = "e:/images/code.jpg";
+        String imagePath2 = "e:/images/test.jpg";
+//        String imagePath2 = "e:/images/verifyCode.jpg";
+//        String imagePath2 = "e:/images/checkcode.gif";
+        File imageFile = createImage(imagePath2);
+//        File imageFile = new File(imagePath);
+
+        BufferedImage bufferedImage = ImageIO.read(imageFile);
+        ITesseract tessreact = new Tesseract();
+        tessreact.setLanguage("eng");
+        tessreact.setDatapath("e:/tessdata");
+        try {
+//            String result = tessreact.doOCR(imageFile);
+            String result = tessreact.doOCR(bufferedImage);
+            System.out.println("识别验证码为："+result);
+        } catch (TesseractException e) {
+            e.printStackTrace();
         }
+
+//        Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
+//        if (client.login()) {
+//
+//            try {
+//                client.getOrders();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (URISyntaxException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+
     }
 }
