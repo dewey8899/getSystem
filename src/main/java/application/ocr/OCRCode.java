@@ -3,6 +3,7 @@ package application.ocr;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -16,10 +17,16 @@ import java.io.IOException;
  */
 public class OCRCode {
 
+    @Value("${OriginalImg}")
+    private static String OriginalImg;
+    @Value("${ocrResult}")
+    private static String ocrResult;
+
     //原始验证码地址
-    private static final String OriginalImg = "e:/images/verifyCode.jpg";
+//    private static final String OriginalImg = "e:/images/verifyCode.jpg";
+
     //识别样本输出地址
-    private static final String ocrResult = "e:/images/orcResult.jpg";
+//    private static final String ocrResult = "e:/images/orcResult.jpg";
     /**
      * 其中removeBackground方法去除验证码噪点，首先我定义了一个临界阈值，这个值代表像素点的亮度，
      * 我们在实际扫描验证码的每一个像素块时通过判断该像素块的亮度（获取该像素块的三原色）是否超过该自定义值，

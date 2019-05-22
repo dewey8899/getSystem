@@ -23,6 +23,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -41,7 +43,8 @@ public class Client {
     private String password;
     private String validateCode;
     private String uuid = "12E76872-4CC3-4187-B746-0946D7CA49CB";
-
+    @Value("${OriginalImg}")
+    private static String OriginalImg;
     /**
      * 实例化httpclient
      */
@@ -67,7 +70,7 @@ public class Client {
             /**
              * 获取自动识别到的验证码
              */
-            validateCode = getVerifyCode();
+            validateCode = getOCRCode();
             ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
             postData.add(new BasicNameValuePair("backgroundType", "sh"));
             postData.add(new BasicNameValuePair("uuid", uuid));
@@ -113,19 +116,13 @@ public class Client {
         }
     }
 
-    private String getVerifyCode() {
-        //提醒用户并输入验证码
-//        log.info("请输入验证码:\n");
-//        Scanner in = new Scanner(System.in);
-//        validateCode = in.nextLine();
-//        in.close();
-//        log.info("输入验证码为："+validateCode);
+    private String getOCRCode() {
         String code = OCRCode.getCode(null,null);
         if (null!=code&& code.length()>=4){
             code = code.substring(0, 4);
             validateCode = code;
         }
-        log.info(String.format("识别到的验证码为:%s",code));
+        log.info(String.format("自动识别到的验证码为:%s",code));
         return code;
     }
 
@@ -148,7 +145,7 @@ public class Client {
         try {
             response = client.execute(getVerifyCode);//获取验证码
             /*验证码写入文件,当前工程的根目录,保存为verifyCode.jped*/
-            outputStream = new FileOutputStream(new File("e:/images/verifyCode.jpg"));
+            outputStream = new FileOutputStream(new File(OriginalImg));
             response.getEntity().writeTo(outputStream);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
@@ -344,18 +341,29 @@ public class Client {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
-        boolean login = client.login();
-        if (login) {
-            try {
-                client.getOrders();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        }
+//        while (true){
+//            Thread.sleep(2000);
+//            boolean login = client.login();
+//            if (login){
+//                try {
+//                    boolean orders = client.getOrders();
+//                    if (orders){
+//                        log.info("导出成功！");
+//                        break;
+//                    }else {
+//                        continue;
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    continue;
+//                } catch (URISyntaxException e) {
+//                    e.printStackTrace();
+//                    continue;
+//                }
+//            }
+//        }
     }
 }

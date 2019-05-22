@@ -2,6 +2,7 @@ package application.scheduled;
 
 import application.system.Client;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,13 +19,16 @@ import java.text.SimpleDateFormat;
 public class ScheduledService {
 
     private static final SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-    private static final String account = "yxbh@379634044";
-    private static final String password = "8ddcff3a80f4189ca1c9d4d902c3c909";
-    @Scheduled(cron = "0 0/10 * * * ?")
-    public void scheduled(){
+    @Value("${account}")
+    private  String account ;
+    @Value("${password}")
+    private String password;
+    @Scheduled(cron = "0 0/1 * * * ?")
+    public void scheduled() throws InterruptedException {
         log.info("=====>>>>>定时任务使用cron  {}",format.format(System.currentTimeMillis()));
         Client client = new Client(account, password);
         while (true){
+            Thread.sleep(2000);
             boolean login = client.login();
             if (login){
                 try {
