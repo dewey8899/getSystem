@@ -4,6 +4,8 @@ import application.ocr.OCRCode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -31,6 +33,7 @@ import java.util.List;
  * Created by deweydu
  * Date on 2019/3/29
  */
+@Slf4j
 public class Client {
 
     static CookieStore cookieStore = new BasicCookieStore();
@@ -89,42 +92,50 @@ public class Client {
             response = client.execute(post);//执行登录操作
 
             HttpEntity entity = response.getEntity();
-            System.out.println("Initial set of cookies:");
+            log.info("Initial set of cookies:");
             printCookies();
             rawHtml = EntityUtils.toString(entity, "utf-8");
-            System.out.println(rawHtml);
-            return true;
+            log.info("输入用户名,密码,验证码后的响应：\n{}",rawHtml);
+            JsonParser parse = new JsonParser();  //创建json解析器
+            JsonObject object = (JsonObject) parse.parse(rawHtml);
+            String dataObj = object.get("code").getAsString();
+            if (dataObj.equals("0")){
+                return true;
+            }else {
+                return false;
+            }
         } catch (ClientProtocolException e) {
-            System.out.println(e.getMessage());
+            log.info(e.getMessage());
+            return false;
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            log.info(e.getMessage());
+            return false;
         }
-        return false;
     }
 
     private String getVerifyCode() {
         //提醒用户并输入验证码
-//        System.out.println("请输入验证码:\n");
+//        log.info("请输入验证码:\n");
 //        Scanner in = new Scanner(System.in);
 //        validateCode = in.nextLine();
 //        in.close();
-//        System.out.println("输入验证码为："+validateCode);
+//        log.info("输入验证码为："+validateCode);
         String code = OCRCode.getCode(null,null);
         if (null!=code&& code.length()>=4){
             code = code.substring(0, 4);
             validateCode = code;
         }
-        System.out.println(String.format("识别到的验证码为:%s",code));
+        log.info(String.format("识别到的验证码为:%s",code));
         return code;
     }
 
     private void printCookies() {
         List<Cookie> cookies0 = cookieStore.getCookies();
         if (cookies0.isEmpty()) {
-            System.out.println("No cookies");
+            log.info("No cookies");
         } else {
             for (int i = 0; i < cookies0.size(); i++) {
-                System.out.println("- " + cookies0.get(i).toString());
+                log.info("- " + cookies0.get(i).toString());
             }
         }
     }
@@ -153,7 +164,7 @@ public class Client {
     }
 
     //2.获取所有的订单
-    public void getOrders() throws IOException, URISyntaxException {
+    public boolean getOrders() throws IOException, URISyntaxException {
         HttpResponse response = null;
         String getOrdersUrl = "https://api.tivolitech.com/order/operate";
         ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
@@ -193,16 +204,25 @@ public class Client {
         httpGet.setHeader("shSession", shSession);
         response = client.execute(httpGet);
         if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            System.out.println("获取列表成功");
+            log.info("获取列表成功");
             HttpEntity entity = response.getEntity();
             rawHtml = EntityUtils.toString(entity, "utf-8");
-            System.out.println(rawHtml);
+//            log.info("获取到的数据{}",rawHtml);
+            if (null == rawHtml){
+                return false;
+            }
             List<String> orderIds = getOrderIds(rawHtml);//3.获取所有的订单ID
-            if (orderIds.size() > 0) {
+            if (CollectionUtils.isNotEmpty(orderIds)) {
                 List<DataVO> vos = getOrderDetail(orderIds);//4.获取每个订单的商品列表
+                if (CollectionUtils.isEmpty(vos)){
+                    return false;
+                }
                 exportExcel(vos);
+            }else {
+                return false;
             }
         }
+        return true;
     }
 
     private void exportExcel(List<DataVO> vos) {
@@ -255,7 +275,7 @@ public class Client {
     }
 
     private List<DataVO> getDataVos(String rawHtml) {
-        System.out.println(rawHtml);
+        log.info(rawHtml);
         List<DataVO> list = new ArrayList<DataVO>();
         JsonParser parse = new JsonParser();  //创建json解析器
         JsonObject object = (JsonObject) parse.parse(rawHtml);
@@ -269,7 +289,7 @@ public class Client {
         String machineName = operaterInfo.get("machineName").getAsString();
         JsonArray productList = dataObj.get("productList").getAsJsonArray();
         if (productList.size() <= 0) {
-            System.out.println("订单号：" + order_id + "没有商品数据！");
+            log.info("订单号：" + order_id + "没有商品数据！");
             return null;
         }
         for (int i = 0; i < productList.size(); i++) {
@@ -306,9 +326,12 @@ public class Client {
     private List<String> getOrderIds(String rawHtml) {
         JsonParser parse = new JsonParser();  //创建json解析器
         JsonObject object = (JsonObject) parse.parse(rawHtml);
+        if (null == object){
+            return null;
+        }
         JsonArray array = object.get("data").getAsJsonArray();    //得到为json的数组
         if (array.size() <= 0) {
-            System.out.println("没有数据！");
+            log.info("没有数据！");
             return null;
         }
         List<String> list = new ArrayList<String>();
