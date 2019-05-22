@@ -1,4 +1,4 @@
-package auto.ocr;
+package application.ocr;
 
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
