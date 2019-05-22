@@ -1,5 +1,6 @@
 package get.system;
 
+import auto.ocr.OCRCode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -73,11 +74,10 @@ public class Client {
             printCookies();
             getVerifyingCode(client);
             printCookies();
-            //提醒用户并输入验证码
-            System.out.println("请输入验证码:\n");
-            Scanner in = new Scanner(System.in);
-            validateCode = in.nextLine();
-            in.close();
+            /**
+             * 获取自动识别到的验证码
+             */
+            validateCode = getVerifyCode();
             ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
             postData.add(new BasicNameValuePair("backgroundType", "sh"));
             postData.add(new BasicNameValuePair("uuid", uuid));
@@ -115,6 +115,22 @@ public class Client {
         return false;
     }
 
+    private String getVerifyCode() {
+        //提醒用户并输入验证码
+//        System.out.println("请输入验证码:\n");
+//        Scanner in = new Scanner(System.in);
+//        validateCode = in.nextLine();
+//        in.close();
+//        System.out.println("输入验证码为："+validateCode);
+        String code = OCRCode.getCode(null,null);
+        if (null!=code&& code.length()>=4){
+            code = code.substring(0, 4);
+            validateCode = code;
+        }
+        System.out.println(String.format("识别到的验证码为:%s",code));
+        return code;
+    }
+
     private void printCookies() {
         List<Cookie> cookies0 = cookieStore.getCookies();
         if (cookies0.isEmpty()) {
@@ -134,7 +150,7 @@ public class Client {
         try {
             response = client.execute(getVerifyCode);//获取验证码
             /*验证码写入文件,当前工程的根目录,保存为verifyCode.jped*/
-            outputStream = new FileOutputStream(new File("e:/verifyCode.jpg"));
+            outputStream = new FileOutputStream(new File("e:/images/verifyCode.jpg"));
             response.getEntity().writeTo(outputStream);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
@@ -149,50 +165,6 @@ public class Client {
         }
     }
 
-    private static File createImage(String imagePath) throws IOException {
-        String fileType = getFileType(imagePath);
-        Iterator<ImageReader> iterator = ImageIO.getImageReadersByFormatName(fileType);
-        ImageReader reader = iterator.next();/*获取图片尺寸*/
-        InputStream inputStream = new FileInputStream(imagePath);
-        ImageInputStream iis = ImageIO.createImageInputStream(inputStream);
-        reader.setInput(iis, true);
-        ImageReadParam param = reader.getDefaultReadParam();
-        Rectangle rectangle = new Rectangle(0,0, 400, 250);        /*指定截取范围*/
-        param.setSourceRegion(rectangle);
-        BufferedImage bi = reader.read(0,param);
-        File outfile = new File("e:/images/verifyCode22.jpg");
-        File dir = new File(outfile.getParent());
-        if(!dir.exists()) {
-            dir.mkdirs();
-        }
-        ImageIO.write(bi, "JPEG", outfile);
-        return outfile;
-    }
-    public static String getFileType(String filePath) {
-        FileInputStream fis = null;
-        /**
-         * 根据文件名称，获取后缀名的方式，但是不保险
-         */
-        String extension = FilenameUtils.getExtension(filePath);
-        try {
-            fis = new FileInputStream(new File(filePath));
-            byte[] bs = new byte[1];
-            fis.read(bs);
-            String type = Integer.toHexString(bs[0]&0xFF);
-            if("ff".equalsIgnoreCase(type))  extension = "JPEG";
-            if("89".equalsIgnoreCase(type)) extension = "PNG";
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("获取图片类型出错 : " +  filePath);
-        } finally {
-            try{
-                if(fis != null) fis.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return extension;
-    }
     //2.获取所有的订单
     public void getOrders() throws IOException, URISyntaxException {
         HttpResponse response = null;
@@ -361,39 +333,22 @@ public class Client {
         return list;
     }
 
+
     public static void main(String[] args) throws IOException {
 
-//        String imagePath2 = "e:/images/code.jpg";
-        String imagePath2 = "e:/images/test.jpg";
-//        String imagePath2 = "e:/images/verifyCode.jpg";
-//        String imagePath2 = "e:/images/checkcode.gif";
-        File imageFile = createImage(imagePath2);
-//        File imageFile = new File(imagePath);
-
-        BufferedImage bufferedImage = ImageIO.read(imageFile);
-        ITesseract tessreact = new Tesseract();
-        tessreact.setLanguage("eng");
-        tessreact.setDatapath("e:/tessdata");
-        try {
-//            String result = tessreact.doOCR(imageFile);
-            String result = tessreact.doOCR(bufferedImage);
-            System.out.println("识别验证码为："+result);
-        } catch (TesseractException e) {
-            e.printStackTrace();
+        Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
+        while (true){
+            boolean login = client.login();
+            if (login){
+                try {
+                    client.getOrders();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
         }
-
-//        Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
-//        if (client.login()) {
-//
-//            try {
-//                client.getOrders();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } catch (URISyntaxException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
-
     }
 }
