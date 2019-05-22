@@ -17,11 +17,6 @@ import java.io.IOException;
  */
 public class OCRCode {
 
-    @Value("${OriginalImg}")
-    private static String OriginalImg;
-    @Value("${ocrResult}")
-    private static String ocrResult;
-
     //原始验证码地址
 //    private static final String OriginalImg = "e:/images/verifyCode.jpg";
 
@@ -159,18 +154,12 @@ public class OCRCode {
     }
 
     public static String getCode(String originalImg,String result){
-        if (null == originalImg){
-            originalImg = OriginalImg;
-        }
-        if (null == result){
-            result = ocrResult;
-        }
         //去噪点
         OCRCode.removeBackground(originalImg, result);
         //裁剪边角
-        OCRCode.cuttingImg(ocrResult);
+        OCRCode.cuttingImg(result);
         //OCR识别
-        String code = executeTess4J(ocrResult);
+        String code = executeTess4J(result);
         return code;
     }
 
