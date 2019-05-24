@@ -51,6 +51,12 @@ public class Client {
     private String OriginalImg;
     @Value("${ocrResult}")
     private String ocrResult;
+
+    @Value("${outPath}")
+    private String outPath;
+
+    @Value("${tessDataPath}")
+    private String tessDataPath;
     /**
      * 实例化httpclient
      */
@@ -123,7 +129,7 @@ public class Client {
     }
 
     private String getOCRCode() {
-        String code = OCRCode.getCode(OriginalImg,ocrResult);
+        String code = OCRCode.getCode(OriginalImg,ocrResult,tessDataPath);
         if (null!=code&& code.length()>=4){
             code = code.substring(0, 4);
             validateCode = code;
@@ -230,7 +236,7 @@ public class Client {
 
     private void exportExcel(List<DataVO> vos) {
         try {
-            ExcelUtils.exportExcel(vos);
+            ExcelUtils.exportExcel(vos,outPath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -279,7 +285,7 @@ public class Client {
 
     private List<DataVO> getDataVos(String rawHtml) {
         log.info(rawHtml);
-        List<DataVO> list = new ArrayList<DataVO>();
+        List<DataVO> list = new ArrayList<>();
         JsonParser parse = new JsonParser();  //创建json解析器
         JsonObject object = (JsonObject) parse.parse(rawHtml);
         JsonObject dataObj = object.get("data").getAsJsonObject();
@@ -349,27 +355,28 @@ public class Client {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
+        Client client = new Client();
 //        Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
-//        while (true){
-//            Thread.sleep(2000);
-//            boolean login = client.login();
-//            if (login){
-//                try {
-//                    boolean orders = client.getOrders();
-//                    if (orders){
-//                        log.info("导出成功！");
-//                        break;
-//                    }else {
-//                        continue;
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    continue;
-//                } catch (URISyntaxException e) {
-//                    e.printStackTrace();
-//                    continue;
-//                }
-//            }
-//        }
+        while (true){
+            Thread.sleep(2000);
+            boolean login = client.login();
+            if (login){
+                try {
+                    boolean orders = client.getOrders();
+                    if (orders){
+                        log.info("导出成功！");
+                        break;
+                    }else {
+                        continue;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    continue;
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+        }
     }
 }

@@ -17,10 +17,10 @@ import java.util.List;
  */
 public class ExcelUtils {
 
-    public static void exportExcel(List<DataVO> vos) throws FileNotFoundException {
+    public static void exportExcel(List<DataVO> vos,String outPath) throws FileNotFoundException {
         File file = null;
 
-        file = new File("e:/补货单.xls");
+        file = new File(outPath);
 
         FileOutputStream os = new FileOutputStream(file);
         String[] headers = { "补货单编号", "补货操作时间", "补货状态", "姓名", "电话", "设备名称", "商品名称", "\n" +

@@ -141,11 +141,12 @@ public class OCRCode {
         }
         return result;
     }
-    public static String executeTess4J(String imgUrl){
+    public static String executeTess4J(String imgUrl,String tessDataPath){
         String ocrResult = "";
         try{
             ITesseract instance = new Tesseract();
             File imgDir = new File(imgUrl);
+            instance.setDatapath(tessDataPath);
             ocrResult = instance.doOCR(imgDir);
         }catch (TesseractException e){
             e.printStackTrace();
@@ -153,13 +154,13 @@ public class OCRCode {
         return ocrResult;
     }
 
-    public static String getCode(String originalImg,String result){
+    public static String getCode(String originalImg,String result,String tessDataPath){
         //去噪点
         OCRCode.removeBackground(originalImg, result);
         //裁剪边角
         OCRCode.cuttingImg(result);
         //OCR识别
-        String code = executeTess4J(result);
+        String code = executeTess4J(result,tessDataPath);
         return code;
     }
 
@@ -167,7 +168,8 @@ public class OCRCode {
 
         String OriginalImg = "e:/images/code.jpg";
         String ocrResult = "e:/images/orcResult.jpg";
-        System.out.println("Ocr识别结果: \n" + getCode(OriginalImg,ocrResult));
+        String tessDataPath = "D:/getSystem/tessdata";
+        System.out.println("Ocr识别结果: \n" + getCode(OriginalImg,ocrResult,tessDataPath));
 
     }
 }

@@ -33,7 +33,7 @@ public class ScheduledService {
         log.info("=====>>>>>定时任务使用cron  {}",format.format(System.currentTimeMillis()));
 //        Client client = new Client();
         while (true){
-            Thread.sleep(2000);
+            Thread.sleep(5000);
             boolean login = client.login();
             if (login){
                 try {
