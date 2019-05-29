@@ -166,9 +166,9 @@ public class OCRCode {
 
     public static void main(String[] args){
 
-        String OriginalImg = "e:/images/code.jpg";
+        String OriginalImg = "e:/images/verifyCode.jpg";
         String ocrResult = "e:/images/orcResult.jpg";
-        String tessDataPath = "D:/getSystem/tessdata";
+        String tessDataPath = "C:\\Users\\deweydu\\getSystem\\tessdata";
         System.out.println("Ocr识别结果: \n" + getCode(OriginalImg,ocrResult,tessDataPath));
 
     }
