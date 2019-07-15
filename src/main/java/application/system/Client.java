@@ -1,7 +1,9 @@
 package application.system;
 
 import application.ocr.OCRCode;
+import application.utils.DateUtils;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -284,11 +287,16 @@ public class Client {
     }
 
     private List<DataVO> getDataVos(String rawHtml) {
-        log.info(rawHtml);
+        log.info("方法：getDataVos入参 【{}】",rawHtml);
         List<DataVO> list = new ArrayList<>();
         JsonParser parse = new JsonParser();  //创建json解析器
         JsonObject object = (JsonObject) parse.parse(rawHtml);
-        JsonObject dataObj = object.get("data").getAsJsonObject();
+        JsonElement jsonElement = object.get("data");
+        if(jsonElement==null){
+            log.info("错误数据object：【{}】",rawHtml);
+            return null;
+        }
+        JsonObject dataObj = jsonElement.getAsJsonObject();
         JsonObject operaterInfo = dataObj.get("operaterInfo").getAsJsonObject();
         String order_id = operaterInfo.get("order_id").getAsString();
         String createTime = operaterInfo.get("createTime").getAsString();
@@ -358,13 +366,17 @@ public class Client {
         Client client = new Client();
 //        Client client = new Client("yxbh@379634044", "8ddcff3a80f4189ca1c9d4d902c3c909");
         while (true){
-            Thread.sleep(2000);
+            Thread.sleep(1000);
             boolean login = client.login();
             if (login){
+                Date date = new Date();
+                log.info("登录成功【{}】", DateUtils.format(date,DateUtils.LONG_WEB_FORMAT_NO_SEC));
                 try {
                     boolean orders = client.getOrders();
                     if (orders){
                         log.info("导出成功！");
+                        Date date2 = new Date();
+                        log.info("耗时【{}】秒",(date2.getTime()-date.getTime())/1000);
                         break;
                     }else {
                         continue;
