@@ -932,6 +932,8 @@ public class DateUtils {
 	
 	public static void main(String[] args) {
 		System.out.println(betweenMonths("2017-02", "2017-07"));
+        Date date1 = DateUtils.beginDateByToday(-8);
+        System.out.println(date1);
 	}
 
     public static Date copy(Date date) {

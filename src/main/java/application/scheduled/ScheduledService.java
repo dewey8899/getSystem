@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by deweydu
@@ -19,6 +21,7 @@ import java.text.SimpleDateFormat;
 @Component
 public class ScheduledService {
 
+    private Date date = new Date();
     private static final SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
     @Value("${account}")
     private  String account ;
@@ -50,6 +53,8 @@ public class ScheduledService {
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
                     continue;
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
             }
         }

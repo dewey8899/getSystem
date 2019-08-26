@@ -17,6 +17,15 @@ public class DataVO {
     private String productUID;
     private String num = "1";
     private String type;
+    private boolean flag = true;
+
+    public boolean isFlag() {
+        return flag;
+    }
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
+    }
 
     public String getProductUID() {
         return productUID;

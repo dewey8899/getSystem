@@ -2,6 +2,7 @@ package application.system;
 
 import application.ocr.OCRCode;
 import application.utils.DateUtils;
+import application.utils.StringUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -176,7 +178,7 @@ public class Client {
     }
 
     //2.获取所有的订单
-    public boolean getOrders() throws IOException, URISyntaxException {
+    public boolean getOrders() throws IOException, URISyntaxException, ParseException {
         HttpResponse response = null;
         String getOrdersUrl = "https://api.tivolitech.com/order/operate";
         ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
@@ -245,7 +247,7 @@ public class Client {
         }
     }
 
-    private List<DataVO> getOrderDetail(List<String> orderIds) throws URISyntaxException, IOException {
+    private List<DataVO> getOrderDetail(List<String> orderIds) throws URISyntaxException, IOException, ParseException {
         HttpResponse response = null;
         List<DataVO> vos = new ArrayList<DataVO>();
         String getOrdersUrl = "https://api.tivolitech.com/order/operateDetails";
@@ -279,14 +281,17 @@ public class Client {
             rawHtml = EntityUtils.toString(entity, "utf-8");
             List<DataVO> list = getDataVos(rawHtml);
             if (list != null) {
-                vos.addAll(list);
+                if (null == list.get(0).getOrder_id() || !list.get(0).isFlag()){
+                    break;
+                }else {
+                    vos.addAll(list);
+                }
             }
         }
         return vos;
-
     }
 
-    private List<DataVO> getDataVos(String rawHtml) {
+    private List<DataVO> getDataVos(String rawHtml) throws ParseException {
         log.info("方法：getDataVos入参 【{}】",rawHtml);
         List<DataVO> list = new ArrayList<>();
         JsonParser parse = new JsonParser();  //创建json解析器
@@ -297,16 +302,38 @@ public class Client {
             return null;
         }
         JsonObject dataObj = jsonElement.getAsJsonObject();
-        JsonElement operaterInfo1 = dataObj.get("operaterInfo");
-        if (operaterInfo1==null || operaterInfo1.getAsJsonObject()==null){
+        JsonElement operaterInfoElement = dataObj.get("operaterInfo");
+        JsonObject operaterInfo = null;
+        try {
+            if (operaterInfoElement==null){
+                return null;
+            }else if(operaterInfoElement.getAsJsonObject()==null){
+                return null;
+            }
+            else{
+                operaterInfo = operaterInfoElement.getAsJsonObject();
+                if (operaterInfo==null){
+                    return null;
+                }
+            }
+        }catch (IllegalStateException e){
             return null;
         }
-        JsonObject operaterInfo = dataObj.get("operaterInfo").getAsJsonObject();
-        if (operaterInfo==null){
-            return null;
-        }
+
         String order_id = operaterInfo.get("order_id").getAsString();
         String createTime = operaterInfo.get("createTime").getAsString();
+        if (StringUtils.isNotBlank(createTime)){
+            //补货操作时间
+            Date date = DateUtils.parse(createTime.substring(0, 10), DateUtils.WEB_FORMAT);
+            //当前时间的前8天
+            Date date1 = DateUtils.beginDateByToday(-8);
+            if (date.before(date1)){
+                DataVO vo = new DataVO();
+                vo.setFlag(false);
+                list.add(vo);
+                return list;
+            }
+        }
         String status = operaterInfo.get("status").getAsString();
         String userName = operaterInfo.get("userName").getAsString();
         String phone = operaterInfo.get("phone").getAsString();
@@ -394,6 +421,8 @@ public class Client {
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
                     continue;
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
             }
         }
