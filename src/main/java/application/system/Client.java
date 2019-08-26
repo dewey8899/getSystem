@@ -297,7 +297,14 @@ public class Client {
             return null;
         }
         JsonObject dataObj = jsonElement.getAsJsonObject();
+        JsonElement operaterInfo1 = dataObj.get("operaterInfo");
+        if (operaterInfo1==null || operaterInfo1.getAsJsonObject()==null){
+            return null;
+        }
         JsonObject operaterInfo = dataObj.get("operaterInfo").getAsJsonObject();
+        if (operaterInfo==null){
+            return null;
+        }
         String order_id = operaterInfo.get("order_id").getAsString();
         String createTime = operaterInfo.get("createTime").getAsString();
         String status = operaterInfo.get("status").getAsString();
