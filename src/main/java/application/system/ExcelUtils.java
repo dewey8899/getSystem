@@ -52,7 +52,7 @@ public class ExcelUtils {
         // 生成一个表格
         HSSFSheet sheet = workbook.createSheet(title);
         // 设置表格默认列宽度为15个字节
-        sheet.setDefaultColumnWidth((short) 20);
+        sheet.setDefaultColumnWidth((short) 10);
         // 生成一个样式
         HSSFCellStyle style = workbook.createCellStyle();
         // 设置这些样式
@@ -65,7 +65,7 @@ public class ExcelUtils {
         style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
         // 生成一个字体
         HSSFFont font = workbook.createFont();
-        // font.setColor(HSSFColor.VIOLET.index);
+         font.setColor(HSSFColor.VIOLET.index);
         font.setFontHeightInPoints((short) 12);
         font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
         // 把字体应用到当前的样式
@@ -112,13 +112,11 @@ public class ExcelUtils {
         for (Object[] o : dataset) {
             index++;
             row = sheet.createRow(index);
-
             for (short i = 0; i < o.length; i++) {
                 HSSFCell cell = row.createCell(i);
                 cell.setCellStyle(style2);
                 if (o[i] instanceof String) {
-                    HSSFRichTextString text = new HSSFRichTextString(
-                            (String) o[i]);
+                    HSSFRichTextString text = new HSSFRichTextString((String) o[i]);
                     cell.setCellValue(text);
                 }
                 if (o[i] instanceof Integer) {
