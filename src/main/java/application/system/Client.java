@@ -35,6 +35,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by deweydu
@@ -78,16 +79,25 @@ public class Client {
 
     //1.登录
     public boolean login() {
-        HttpGet getLoginPage = new HttpGet("https://sh.tivolitech.com/login");//教务处登陆页面get
+        HttpGet getLoginPage = new HttpGet("https://sh.tivolitech.com:1391/login");//登陆页面get
         try {
             client.execute(getLoginPage);
             printCookies();
             getVerifyingCode(client);
             printCookies();
-            /**
-             * 获取自动识别到的验证码
-             */
-            validateCode = getOCRCode();
+//            /**
+//             * 获取自动识别到的验证码
+//             */
+//            validateCode = getOCRCode();
+
+            //手动输入验证码
+            //提醒用户并输入验证码
+            System.out.println("请输入验证码:\n");
+            Scanner in = new Scanner(System.in);
+            validateCode = in.nextLine();
+            in.close();
+
+
             ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
             postData.add(new BasicNameValuePair("backgroundType", "sh"));
             postData.add(new BasicNameValuePair("uuid", uuid));
@@ -95,7 +105,7 @@ public class Client {
             postData.add(new BasicNameValuePair("password", password));//密码
             postData.add(new BasicNameValuePair("validateCode", validateCode));//验证码
             RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(60000).build();
-            HttpPost post = new HttpPost("https://api.tivolitech.com/business/login");//构建post对象
+            HttpPost post = new HttpPost("https://api.tivolitech.com:1391/business/login");//构建post对象
             UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postData);
             post.setEntity(formEntity);//捆绑参数
             post.setConfig(requestConfig);
@@ -155,7 +165,8 @@ public class Client {
     }
 
     void getVerifyingCode(HttpClient client) {
-        String url = "https://api.tivolitech.com/user/login/code?uuid=";
+//        String url = "https://api.tivolitech.com/user/login/code?uuid=";
+        String url = "https://api.tivolitech.com:1391/user/login/code?uuid=";
         HttpGet getVerifyCode = new HttpGet(url + uuid);//验证码get
         OutputStream outputStream = null;
         HttpResponse response;
@@ -180,7 +191,7 @@ public class Client {
     //2.获取所有的订单
     public boolean getOrders() throws IOException, URISyntaxException, ParseException {
         HttpResponse response = null;
-        String getOrdersUrl = "https://api.tivolitech.com/order/operate";
+        String getOrdersUrl = "https://api.tivolitech.com:1391/order/operate";
         ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
         postData.add(new BasicNameValuePair("backgroundType", "sh"));
         postData.add(new BasicNameValuePair("phone", ""));
@@ -251,7 +262,7 @@ public class Client {
     private List<DataVO> getOrderDetail(List<String> orderIds) throws URISyntaxException, IOException, ParseException {
         HttpResponse response = null;
         List<DataVO> vos = new ArrayList<DataVO>();
-        String getOrdersUrl = "https://api.tivolitech.com/order/operateDetails";
+        String getOrdersUrl = "https://api.tivolitech.com:1391/order/operateDetails";
         URIBuilder uriBuilder = new URIBuilder(getOrdersUrl);
         for (int i = 0; i < orderIds.size(); i++) {
             ArrayList<NameValuePair> postData = new ArrayList<NameValuePair>();
@@ -324,13 +335,13 @@ public class Client {
         String order_id = operaterInfo.get("order_id").getAsString();
         String createTime = operaterInfo.get("createTime").getAsString();
         /**
-         * 要最新8天的数据
+         * 要最新8天的数据sh.tivolitech.com
          */
         if (StringUtils.isNotBlank(createTime)){
             //补货操作时间
             Date date = DateUtils.parse(createTime.substring(0, 10), DateUtils.WEB_FORMAT);
             //当前时间的前8天
-            Date date1 = DateUtils.beginDateByToday(-1);
+            Date date1 = DateUtils.beginDateByToday(-3);
             if (date.before(date1)){
                 DataVO vo = new DataVO();
                 vo.setFlag(false);
