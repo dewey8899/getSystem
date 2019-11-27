@@ -341,7 +341,7 @@ public class Client {
             //补货操作时间
             Date date = DateUtils.parse(createTime.substring(0, 10), DateUtils.WEB_FORMAT);
             //当前时间的前8天
-            Date date1 = DateUtils.beginDateByToday(-3);
+            Date date1 = DateUtils.beginDateByToday(-1);
             if (date.before(date1)){
                 DataVO vo = new DataVO();
                 vo.setFlag(false);
@@ -439,6 +439,8 @@ public class Client {
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
+            }else {
+                continue;
             }
         }
     }
