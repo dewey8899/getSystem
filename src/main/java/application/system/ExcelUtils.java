@@ -52,7 +52,7 @@ public class ExcelUtils {
         // 生成一个表格
         HSSFSheet sheet = workbook.createSheet(title);
         // 设置表格默认列宽度为15个字节
-        sheet.setDefaultColumnWidth((short) 10);
+        sheet.setDefaultColumnWidth((short) 15);
         // 生成一个样式
         HSSFCellStyle style = workbook.createCellStyle();
         // 设置这些样式
@@ -126,8 +126,7 @@ public class ExcelUtils {
                     cell.setCellValue(scale2points(((Long) o[i]).floatValue()));
                 }
                 if (o[i] instanceof Date) {
-                    HSSFRichTextString text = new HSSFRichTextString(
-                            sdf.format(o[i]));
+                    HSSFRichTextString text = new HSSFRichTextString(sdf.format(o[i]));
                     cell.setCellValue(text);
                 }
                 if (o[i] instanceof Double) {
@@ -137,8 +136,7 @@ public class ExcelUtils {
                     cell.setCellValue(scale2points(((Float) o[i]).floatValue()));
                 }
                 if (o[i] instanceof BigDecimal) {
-                    cell.setCellValue(scale2points(((BigDecimal) o[i])
-                            .floatValue()));
+                    cell.setCellValue(scale2points(((BigDecimal) o[i]).floatValue()));
                 }
                 if (o[i] instanceof BigInteger) {
                     cell.setCellValue(((BigInteger) o[i]).intValue());

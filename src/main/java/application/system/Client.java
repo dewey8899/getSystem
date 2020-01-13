@@ -203,8 +203,8 @@ public class Client {
         postData.add(new BasicNameValuePair("busname", ""));
         postData.add(new BasicNameValuePair("pageSize", "100000"));
         postData.add(new BasicNameValuePair("pageNumber", "1"));
-        postData.add(new BasicNameValuePair("starDate", "2019-10-01+10:02"));
-        postData.add(new BasicNameValuePair("endDate", "2022-12-31+10:02"));
+        postData.add(new BasicNameValuePair("starDate", "2020-01-09+00:00"));
+        postData.add(new BasicNameValuePair("endDate" , "2020-01-13+00:00"));
 
         URIBuilder uriBuilder = new URIBuilder(getOrdersUrl);
         uriBuilder.clearParameters();
@@ -334,24 +334,36 @@ public class Client {
 
         String order_id = operaterInfo.get("order_id").getAsString();
         String createTime = operaterInfo.get("createTime").getAsString();
-        /**
-         * 要最新8天的数据sh.tivolitech.com
-         */
-        if (StringUtils.isNotBlank(createTime)){
-            //补货操作时间
-            Date date = DateUtils.parse(createTime.substring(0, 10), DateUtils.WEB_FORMAT);
-            //当前时间的前8天
-            Date date1 = DateUtils.beginDateByToday(-1);
-            if (date.before(date1)){
-                DataVO vo = new DataVO();
-                vo.setFlag(false);
-                list.add(vo);
-                return list;
-            }
-        }
+//        /**
+//         * 要最新8天的数据sh.tivolitech.com
+//         */
+//        if (StringUtils.isNotBlank(createTime)){
+//            //补货操作时间
+//            Date date = DateUtils.parse(createTime.substring(0, 10), DateUtils.WEB_FORMAT);
+//            //当前时间的前8天
+//            Date date1 = DateUtils.beginDateByToday(-1);
+//            if (date.before(date1)){
+//                DataVO vo = new DataVO();
+//                vo.setFlag(false);
+//                list.add(vo);
+//                return list;
+//            }
+//        }
         String status = operaterInfo.get("status").getAsString();
-        String userName = operaterInfo.get("userName").getAsString();
-        String phone = operaterInfo.get("phone").getAsString();
+        JsonElement userName1 = operaterInfo.get("userName");
+        String userName;
+        if (!userName1.isJsonNull()){
+            userName = userName1.getAsString();
+        }else {
+            userName = "";
+        }
+        JsonElement phone1 = operaterInfo.get("phone");
+        String phone;
+        if (!phone1.isJsonNull()){
+            phone = phone1.getAsString();
+        }else {
+            phone = "";
+        }
         String machineName = operaterInfo.get("machineName").getAsString();
         JsonArray productList = dataObj.get("productList").getAsJsonArray();
         if (productList.size() <= 0) {
