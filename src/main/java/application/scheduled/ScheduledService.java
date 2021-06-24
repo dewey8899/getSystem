@@ -31,7 +31,7 @@ public class ScheduledService {
     private String OriginalImg;
     @Autowired
     private Client client;
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0/5 * * * * ?")
     public void scheduled() throws InterruptedException {
         log.info("=====>>>>>定时任务使用cron  {}",format.format(System.currentTimeMillis()));
 //        Client client = new Client();

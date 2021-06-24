@@ -15,29 +15,31 @@ import java.util.List;
  * Author: Administrator
  * Date 2019/3/30 0030 上午 0:31
  */
-public class ExcelUtils {
+public class ExcelUtils2 {
 
-    public static void exportExcel(List<PotentialVO> vos,String outPath) throws FileNotFoundException {
+    public static void exportExcel(List<PersonVO> vos,String outPath) throws FileNotFoundException {
         File file = null;
 
-        file = new File("e:/images/p434585----潜在信息列表.xls");
+        file = new File("e:/images/试驾联系人列表.xls");
 
         FileOutputStream os = new FileOutputStream(file);
-        String[] headers = { "建立时间", "客户姓名", "手机号", "意向车系", "一级渠道"};
-        List<Object[]> dataset = new ArrayList<Object[]>();
+        String[] headers = { "销售顾问", "联系人名称", "联系人电话", "与客户关系",  "客户名称", "手机号","联系人类型","备注"};
+        List<Object[]> dataset = new ArrayList<>();
         for (int i = 0; i < vos.size();i++) {
-            Object[] row = new Object[17];
-            PotentialVO dataVO = vos.get(i);
+            Object[] row = new Object[8];
+            PersonVO dataVO = vos.get(i);
             int j = 0;
-            row[j++] = dataVO.getCreatedAt();
+            row[j++] = dataVO.getConsultant();
+            row[j++] = dataVO.getContactName();
+            row[j++] = dataVO.getContactMobile();
+            row[j++] = dataVO.getRelationship();
             row[j++] = dataVO.getCustomerName();
             row[j++] = dataVO.getMobilePhone();
-            row[j++] = dataVO.getIntentSeriesName();
-            row[j++] = dataVO.getPrimaryChannel();
-            row[j++] = dataVO.getBookingDate();
+            row[j++] = dataVO.getContactType();
+            row[j++] = dataVO.getRemark();
             dataset.add(row);
         }
-        exportExcel("p434585客户资源列表", headers, dataset, os, null);
+        exportExcel("试驾联系人列表", headers, dataset, os, null);
 
     }
 
